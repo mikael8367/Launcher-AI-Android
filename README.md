@@ -15,9 +15,17 @@ O painel **Controle do celular por IA** usa o serviço oficial de Acessibilidade
 
 As coordenadas dependem da resolução e da orientação atuais. O serviço comunica o resultado da última ação na tela.
 
+## IA online
+
+O painel **Cérebro online** conecta à API da OpenAI usando uma chave própria do usuário. Configure a chave no próprio app; ela é criptografada no aparelho com Android Keystore e não deve ser colocada no código nem no GitHub. O uso da API pode gerar custos na conta do provedor.
+
+A IA transforma o pedido em uma sugestão estruturada, mas este protótipo não recebe imagens da tela e não consegue compreender qualquer interface visual. O aplicativo só aceita os comandos explicitamente permitidos pelo serviço de Acessibilidade. A primeira ação proposta aparece numa confirmação; só é executada após tocar em **Executar**. Ações fora da lista permitida são recusadas.
+
+**Aviso para distribuição:** guardar a chave no aparelho é melhor do que incluí-la no APK ou no repositório, mas um app distribuído publicamente deve usar um backend próprio para proteger credenciais e controlar custos. Nunca compartilhe sua chave da API.
+
 ## Limites importantes
 
-Esta versão **ainda não é uma IA geral que entende qualquer pedido em linguagem natural**. Ela executa os comandos explícitos listados acima. Ações como conceder permissões, instalar APKs, entrar em contas, confirmar compras ou ignorar a tela de bloqueio não são feitas silenciosamente: o Android mantém as confirmações e proteções do sistema sob controle do usuário. A acessibilidade precisa ser habilitada pelo próprio usuário.
+A IA online já interpreta pedidos em linguagem natural para propor comandos, mas **ainda não é um agente geral com visão da tela**. A execução continua limitada aos comandos explícitos listados acima. Ações como conceder permissões, instalar APKs, entrar em contas, confirmar compras ou ignorar a tela de bloqueio não são feitas silenciosamente: o Android mantém as confirmações e proteções do sistema sob controle do usuário. A acessibilidade precisa ser habilitada pelo próprio usuário.
 
 O projeto ainda inclui a tela experimental de medição de FPS do Minecraft por OCR do contador F3, com consentimento de captura de tela por sessão e exportação CSV. Essa função é separada do controle do celular.
 
