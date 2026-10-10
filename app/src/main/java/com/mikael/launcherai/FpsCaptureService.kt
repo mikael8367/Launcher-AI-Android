@@ -56,7 +56,7 @@ class FpsCaptureService : Service() {
     private val recognizer by lazy { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
     private var startElapsedRealtime = 0L
     private var lastOcrElapsedRealtime = 0L
-    private var finalized = false
+    @Volatile private var finalized = false
     private var lastMatchedLine = ""
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -155,6 +155,10 @@ class FpsCaptureService : Service() {
     }
 
     private fun processNextImage(reader: ImageReader) {
+        if (finalized) {
+            try { reader.acquireLatestImage()?.close() } catch (_: Exception) {}
+            return
+        }
         val now = SystemClock.elapsedRealtime()
         if (now - lastOcrElapsedRealtime < 900L) {
             val skipped = reader.acquireLatestImage()
@@ -174,13 +178,16 @@ class FpsCaptureService : Service() {
         val frame = bitmap ?: return
         recognizer.process(InputImage.fromBitmap(frame, 0))
             .addOnSuccessListener { visionText ->
+                if (finalized) return@addOnSuccessListener
                 val text = visionText.text
                 prefs.edit().putString("last_line", text.take(900)).apply()
                 val fps = findFps(text)
                 if (fps != null) recordSample(fps, matchingLine(text, fps))
             }
             .addOnFailureListener {
-                prefs.edit().putString("state", "Captura ativa; o texto do F3 não pôde ser lido nesta amostra.").apply()
+                if (!finalized) {
+                    prefs.edit().putString("state", "Captura ativa; o texto do F3 não pôde ser lido nesta amostra.").apply()
+                }
             }
             .addOnCompleteListener {
                 if (!frame.isRecycled) frame.recycle()
@@ -244,6 +251,13 @@ class FpsCaptureService : Service() {
 
     private fun finishCapture() {
         if (finalized) {
+            stopSelf()
+            return
+        }
+        if (projection == null && !prefs.getBoolean("capturing", false)) {
+            finalized = true
+            releaseCapture()
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return
         }
