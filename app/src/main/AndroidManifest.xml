@@ -3,14 +3,23 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <queries>
+        <package android:name="com.tungsten.fcl" />
+        <package android:name="net.kdt.pojavlaunch" />
+    </queries>
+
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@drawable/launcher_icon"
         android:label="Launcher AI"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,5 +37,9 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+        <service
+            android:name=".FpsCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
     </application>
 </manifest>
