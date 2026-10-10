@@ -45,3 +45,7 @@ A compilação do GitHub Actions verifica o código, mas não substitui teste f�
 - Kotlin nativo para Android.
 - Android AccessibilityService e gestos de acessibilidade.
 - ML Kit Text Recognition para a ferramenta experimental de leitura de FPS.
+
+### Memória adaptativa
+
+A IA usa um histórico local de até 30 exemplos de pedidos, comandos propostos e feedback explícito ("funcionou" / "não funcionou"). O usuário controla a avaliação, pode consultar a memória e apagá-la no app. Esse mecanismo ajusta o contexto enviado ao modelo; não treina os pesos do modelo nem garante que a próxima ação funcionará.
