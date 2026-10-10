@@ -1,40 +1,39 @@
 # Launcher AI Android
 
-Aplicativo Android para investigar o desempenho de launchers de Minecraft Java, com foco em Minecraft 1.12.2 + OptiFine e celulares como o Samsung Galaxy A12.
+Protótipo de **controle assistido do celular Android**, pensado para Android 12 e aparelhos como o Samsung Galaxy A12.
 
-## O que já faz o código
+## Controle do celular
 
-- Detecta se FCL/PojavLauncher estão instalados (quando usam os identificadores de pacote declarados) e fornece acesso às páginas oficiais de versões.
-- Solicita a permissão de captura de tela do Android para uma sessão de teste.
-- Lê por OCR o contador de FPS visível no overlay F3 do próprio Minecraft, usando ML Kit localmente.
-- Registra as leituras reconhecidas, calcula média/mínimo/máximo, mantém histórico local e exporta histórico/amostras para CSV.
-- Mostra modelo do celular, versão do Android, ABI, RAM disponível e estado de algumas permissões.
-- Compila um APK de depuração via GitHub Actions e publica o APK como artefato do workflow.
+O painel **Controle do celular por IA** usa o serviço oficial de Acessibilidade do Android, que precisa ser ativado manualmente em Configurações > Acessibilidade > Launcher AI. Depois de ativado, o app aceita estes comandos:
 
-## Como obter e testar o APK
+- `abrir NOME DO APP` — abre um aplicativo instalado cujo nome corresponda ao texto.
+- `voltar`, `início`, `recentes` — navegação do sistema.
+- `notificações`, `configurações rápidas` — abre os painéis do sistema.
+- `tocar X Y` — toca nas coordenadas da tela em pixels.
+- `deslizar X1 Y1 X2 Y2` — executa um gesto entre dois pontos.
+- Os botões rápidos Voltar, Início e Recentes executam as mesmas ações.
 
-1. Abra **Actions** no repositório.
-2. Entre na execução mais recente de **Android build** que terminou com sucesso.
-3. Baixe o artefato Launcher-AI-debug e extraia o app-debug.apk.
-4. Instale no Android 12. O app não é ainda um release assinado para distribuição.
+As coordenadas dependem da resolução e da orientação atuais. O serviço comunica o resultado da última ação na tela.
 
-## Como medir FPS do jogo de verdade
+## Limites importantes
 
-1. Instale/abra um launcher a partir da página oficial acessada pelo app.
-2. Pelo launcher, obtenha Minecraft Java 1.12.2 e instale OptiFine; entre com sua conta/licença conforme solicitado.
-3. Entre num mundo normal. Para comparar launchers, use o mesmo mundo, posição, distância de renderização, configurações gráficas, runtime, renderizador, brilho e duração.
-4. Deixe o F3 visível no jogo. O app só registra leituras quando o OCR reconhece um padrão explícito como “60 fps” ou “fps: 60”.
-5. Volte ao Launcher AI, escolha o launcher no seletor e toque em **Iniciar captura real**. Aceite a tela de consentimento do Android e volte ao Minecraft pelas aplicações recentes.
-6. Deixe o jogo rodar sem mexer por pelo menos 60 segundos. Depois volte ao Launcher AI e pare o teste. Confira o número de amostras reconhecidas e exporte o CSV.
+Esta versão **ainda não é uma IA geral que entende qualquer pedido em linguagem natural**. Ela executa os comandos explícitos listados acima. Ações como conceder permissões, instalar APKs, entrar em contas, confirmar compras ou ignorar a tela de bloqueio não são feitas silenciosamente: o Android mantém as confirmações e proteções do sistema sob controle do usuário. A acessibilidade precisa ser habilitada pelo próprio usuário.
 
-## Precisão / limitações conhecidas
+O projeto ainda inclui a tela experimental de medição de FPS do Minecraft por OCR do contador F3, com consentimento de captura de tela por sessão e exportação CSV. Essa função é separada do controle do celular.
 
-- Os números vêm do contador F3 real na tela, não de dados fictícios. O OCR pode perder ou interpretar incorretamente uma leitura; amostras não reconhecidas não são interpoladas. Por isso, não é correto prometer precisão de 100% apenas com OCR. A média é das leituras reconhecidas, não de cada frame individual.
-- Para medição frame-a-frame mais precisa seria necessária integração dentro de Minecraft/OptiFine ou um mod/agente de benchmark compatível com a instância testada.
-- A captura exige consentimento por sessão e processa as imagens em memória; imagens não são salvas.
-- O app atualmente não faz login, não baixa automaticamente o jogo ou OptiFine, não instala APKs silenciosamente, não altera sozinho todas as opções do OptiFine e não percorre mundos automaticamente. O Android exige confirmação para instalação/autenticação e cada launcher tem fluxos e armazenamento próprios.
-- O serviço de acessibilidade é apenas uma base opcional e ainda não executa a navegação automática. Não habilite acessibilidade para conceder permissões às cegas; o usuário mantém o controle.
+## Build e teste
 
-## Compilação
+1. Abra **Actions** neste repositório.
+2. Abra a execução mais recente do workflow **Android build** que terminou com sucesso.
+3. Baixe o artefato `Launcher-AI-debug` e extraia `app-debug.apk`.
+4. Instale no Android. O APK de depuração não é um release assinado para distribuição.
+5. Abra o app, toque em ativar Acessibilidade e habilite **Launcher AI** manualmente.
+6. Teste primeiro `voltar`, `início` e `abrir Configurações`.
 
-Projeto nativo Kotlin, minSdk 26, targetSdk 35, Android Gradle Plugin 8.7.3 e Gradle 8.9. A automação de build está em .github/workflows/android.yml.
+A compilação do GitHub Actions verifica o código, mas não substitui teste físico no Galaxy A12. Ainda é necessário validar comportamento real e corrigir qualquer erro reportado pelo aparelho.
+
+## Tecnologias
+
+- Kotlin nativo para Android.
+- Android AccessibilityService e gestos de acessibilidade.
+- ML Kit Text Recognition para a ferramenta experimental de leitura de FPS.
