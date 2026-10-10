@@ -46,6 +46,7 @@ class MainActivity : Activity() {
     private val white = 0xFFF5FFF9.toInt()
     private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
     private val aiClient by lazy { AiOnlineClient(this) }
+    private val learningMemory by lazy { AiLearningMemory(this) }
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var statusText: TextView
     private lateinit var deviceText: TextView
@@ -410,7 +411,7 @@ class MainActivity : Activity() {
         controlStatus.text = "Consultando a IA online…"
         Thread {
             try {
-                val plan = aiClient.ask(request)
+                val plan = aiClient.ask(request, learningMemory.summary())
                 val reply = plan.optString("reply", "A IA respondeu sem explicação.")
                 val commands = plan.optJSONArray("commands") ?: org.json.JSONArray()
                 runOnUiThread {
