@@ -155,14 +155,45 @@ class MainActivity : Activity() {
         launchers.addView(label("Escolha o launcher que vai testar. Se não estiver instalado, o botão abre a página oficial de versões; o Android pedirá confirmação ao instalar o APK.", 13f, muted))
         launchers.addView(space(10))
         launcherSpinner = Spinner(this)
+        val launcherNames = listOf(
+            "FCL (Fold Craft Launcher)",
+            "PojavLauncher",
+            "Amethyst Launcher",
+            "Zalith Launcher 2",
+            "Zalith Launcher (legacy)",
+            "MojoLauncher",
+            "Copper Launcher",
+            "PojavInfinity",
+            "Boardwalk (legacy)",
+            "HMCL-PE",
+            "Crafty Controller Launcher",
+            "MCinaBox (legacy)",
+            "Minecraft Java Launcher Android",
+            "PojavLauncher Android fork",
+            "Amethyst Android fork",
+            "FCL community fork 1",
+            "FCL community fork 2",
+            "Pojav community build 1",
+            "Pojav community build 2",
+            "Zalith community build",
+            "Mobile Java Launcher (community)",
+            "Minecraft Java ARM Launcher",
+            "Minecraft Java GLES Launcher",
+            "Minecraft Java GL4ES build",
+            "Minecraft Java VirGL build",
+            "Minecraft Java Zink build",
+            "Minecraft Java ANGLE build",
+            "Minecraft Java legacy build",
+            "Minecraft Java performance fork",
+            "Other / manual"
+        )
         launcherSpinner.adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_dropdown_item,
-            listOf("FCL", "PojavLauncher", "Outro / manual")
+            launcherNames
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         launcherSpinner.setSelection(
-            listOf("FCL", "PojavLauncher", "Outro / manual")
-                .indexOf(prefs.getString("selected_launcher", "FCL")).coerceAtLeast(0)
+            launcherNames.indexOf(prefs.getString("selected_launcher", launcherNames.first())).coerceAtLeast(0)
         )
         launcherSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -172,9 +203,66 @@ class MainActivity : Activity() {
         })
         launchers.addView(launcherSpinner, matchWrap())
         launchers.addView(space(9))
-        addLauncherRow(launchers, "Fold Craft Launcher (FCL)", "com.tungsten.fcl", URL_FCL)
-        launchers.addView(space(7))
-        addLauncherRow(launchers, "PojavLauncher", "net.kdt.pojavlaunch", URL_POJAV)
+        launchers.addView(label("Catálogo com 30 opções e páginas de projetos/forks. Nem todas são launchers independentes ou mantidas; confira o projeto antes de instalar.", 12f, 0xFFFFD18A.toInt()))
+        addLauncherRow(launchers, "Fold Craft Launcher (FCL)", "", "https://github.com/FCL-Team/FoldCraftLauncher/releases")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "PojavLauncher", "", "https://github.com/PojavLauncherTeam/PojavLauncher/releases")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Amethyst Launcher", "", "https://github.com/AngelAuraMC/Amethyst-Android/releases")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Zalith Launcher 2", "", "https://github.com/ZalithLauncher/ZalithLauncher2/releases")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Zalith Launcher (legacy)", "", "https://github.com/ZalithLauncher/ZalithLauncher/releases")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "MojoLauncher (community build)", "", "https://github.com/search?q=MojoLauncher&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Copper Launcher (community build)", "", "https://github.com/search?q=Copper+Launcher+Minecraft+Android&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "PojavInfinity (community fork)", "", "https://github.com/MakerLunar/PojavInfinity/releases")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Boardwalk (legacy)", "", "https://github.com/Boardwalk")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "HMCL-PE (community project)", "", "https://github.com/search?q=HMCL-PE&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "MCinaBox (legacy)", "", "https://github.com/search?q=MCinaBox&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "PojavLauncher forks", "", "https://github.com/PojavLauncherTeam/PojavLauncher/forks")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Amethyst forks", "", "https://github.com/AngelAuraMC/Amethyst-Android/forks")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "FCL forks", "", "https://github.com/FCL-Team/FoldCraftLauncher/forks")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Zalith 2 forks", "", "https://github.com/ZalithLauncher/ZalithLauncher2/forks")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "PojavLauncher community builds", "", "https://github.com/search?q=PojavLauncher+Android&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Minecraft Java Android launchers", "", "https://github.com/search?q=Minecraft+Java+Launcher+Android&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Minecraft Android launcher forks", "", "https://github.com/search?q=Minecraft+launcher+Android+fork&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Pojav GL4ES builds", "", "https://github.com/search?q=Pojav+GL4ES&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Pojav VirGL builds", "", "https://github.com/search?q=Pojav+VirGL&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Pojav Zink builds", "", "https://github.com/search?q=Pojav+Zink&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Pojav ARM64 builds", "", "https://github.com/search?q=PojavLauncher+arm64&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Pojav legacy builds", "", "https://github.com/search?q=PojavLauncher+legacy&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "FCL community builds", "", "https://github.com/search?q=FoldCraftLauncher+fork&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Amethyst community builds", "", "https://github.com/search?q=Amethyst+Android+Minecraft+launcher&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Zalith community builds", "", "https://github.com/search?q=Zalith+Launcher+Minecraft&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Minecraft Java mobile launcher projects", "", "https://github.com/search?q=Minecraft+Java+mobile+launcher&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Minecraft Java launcher ARM projects", "", "https://github.com/search?q=Minecraft+Java+ARM+Android&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Minecraft Java launcher performance forks", "", "https://github.com/search?q=Pojav+performance+fork&type=repositories")
+        launchers.addView(space(5))
+        addLauncherRow(launchers, "Other launcher projects", "", "https://github.com/search?q=Minecraft+launcher+Android&type=repositories")
         root.addView(launchers, matchWrap())
         root.addView(space(12), matchWrap())
 
