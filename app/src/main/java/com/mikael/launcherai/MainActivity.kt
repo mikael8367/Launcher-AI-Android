@@ -47,6 +47,8 @@ class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
     private val aiClient by lazy { AiOnlineClient(this) }
     private val learningMemory by lazy { AiLearningMemory(this) }
+    private var lastAiRequest = ""
+    private var lastAiCommand = ""
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var statusText: TextView
     private lateinit var deviceText: TextView
@@ -159,6 +161,39 @@ class MainActivity : Activity() {
         aiCard.addView(actionButton("CONFIGURAR CHAVE DA IA") { configureAiKey() })
         aiCard.addView(space(6))
         aiCard.addView(actionButton("PERGUNTAR À IA E PLANEJAR AÇÃO") { askOnlineAi() })
+        aiCard.addView(space(6))
+        aiCard.addView(actionButton("AVALIAR ÚLTIMA AÇÃO") {
+            if (lastAiCommand.isBlank()) {
+                showMessage("Ainda não há ação da IA para avaliar.")
+            } else {
+                AlertDialog.Builder(this).setTitle("Como foi?")
+                    .setMessage("Pedido: " + lastAiRequest + "\nComando: " + lastAiCommand)
+                    .setPositiveButton("Funcionou") { _, _ ->
+                        learningMemory.record(lastAiRequest, lastAiCommand, "funcionou")
+                        showMessage("Feedback salvo. A IA considerará este exemplo nos próximos pedidos.")
+                    }
+                    .setNegativeButton("Não funcionou") { _, _ ->
+                        learningMemory.record(lastAiRequest, lastAiCommand, "falhou")
+                        showMessage("Falha registrada. A IA considerará este exemplo nos próximos pedidos.")
+                    }
+                    .setNeutralButton("Cancelar", null)
+                    .show()
+            }
+        })
+        aiCard.addView(space(6))
+        aiCard.addView(actionButton("VER MEMÓRIA DE APRENDIZADO") {
+            showMessage(learningMemory.summary())
+        })
+        aiCard.addView(space(6))
+        aiCard.addView(actionButton("APAGAR MEMÓRIA DE APRENDIZADO") {
+            AlertDialog.Builder(this).setTitle("Apagar memória?")
+                .setMessage("Apagar os exemplos de feedback guardados neste aparelho?")
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Apagar") { _, _ ->
+                    learningMemory.clear()
+                    showMessage("Memória apagada.")
+                }.show()
+        })
         aiCard.addView(space(6))
         aiCard.addView(actionButton("APAGAR CHAVE SALVA") {
             AlertDialog.Builder(this).setTitle("Apagar chave?")
@@ -446,6 +481,8 @@ class MainActivity : Activity() {
                         showMessage("$reply\\n\\nComando recusado: $command")
                         return@runOnUiThread
                     }
+                    lastAiRequest = request
+                    lastAiCommand = command
                     AlertDialog.Builder(this)
                         .setTitle("Confirmar ação da IA")
                         .setMessage("$reply\\n\\nAção proposta: $command\\n\\nNada será executado sem tua confirmação.")
