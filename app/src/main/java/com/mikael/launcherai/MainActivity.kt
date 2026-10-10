@@ -20,6 +20,7 @@ import android.view.View
 import android.view.accessibility.AccessibilityManager
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Spinner
@@ -50,6 +51,8 @@ class MainActivity : Activity() {
     private lateinit var statsText: TextView
     private lateinit var historyText: TextView
     private lateinit var launcherSpinner: Spinner
+    private lateinit var controlInput: EditText
+    private lateinit var controlStatus: TextView
 
     private val refreshTask = object : Runnable {
         override fun run() {
@@ -97,6 +100,53 @@ class MainActivity : Activity() {
         intro.addView(space(9))
         intro.addView(label("Importante: isto mede as leituras exibidas pelo jogo. O OCR pode perder leituras; para resultados comparáveis, use o mesmo mundo, local, configurações e duração.", 12f, 0xFFFFD18A.toInt()))
         root.addView(intro, matchWrap())
+        root.addView(space(12), matchWrap())
+
+        val control = card()
+        control.addView(label("CONTROLE DO CELULAR POR IA", 18f, white, true))
+        control.addView(space(6))
+        control.addView(label("Use comandos para navegar pelo Android. O controle funciona depois que você ativar manualmente o serviço de Acessibilidade. Ele não pode ignorar bloqueios, permissões ou confirmações do sistema.", 13f, muted))
+        control.addView(space(8))
+        controlInput = EditText(this).apply {
+            hint = "Ex.: abrir YouTube, voltar, tocar 500 900"
+            setHintTextColor(0xFF78938A.toInt())
+            setTextColor(white)
+            textSize = 15f
+            singleLine = false
+            minLines = 2
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(0xFF071713.toInt())
+                cornerRadius = dp(10).toFloat()
+                setStroke(dp(1), 0xFF28614C.toInt())
+            }
+        }
+        control.addView(controlInput, matchWrap())
+        control.addView(space(8))
+        control.addView(actionButton("EXECUTAR COMANDO") {
+            val command = controlInput.text?.toString().orEmpty()
+            if (!LauncherAccessibilityService.isConnected()) {
+                showMessage("Ative o serviço Launcher AI em Configurações > Acessibilidade. O Android exige essa ativação manual.")
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            } else {
+                LauncherAccessibilityService.command(command)
+                controlStatus.text = LauncherAccessibilityService.lastResult
+            }
+        })
+        control.addView(space(6))
+        val shortcuts = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        shortcuts.addView(actionButton("Voltar") { sendControl("voltar") }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        shortcuts.addView(actionButton("Início") { sendControl("início") }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        shortcuts.addView(actionButton("Recentes") { sendControl("recentes") }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        control.addView(shortcuts, matchWrap())
+        control.addView(space(6))
+        control.addView(actionButton("VER COMANDOS") {
+            showMessage("Comandos disponíveis agora:\n• abrir NOME DO APP\n• voltar\n• início\n• recentes\n• notificações\n• configurações rápidas\n• tocar X Y\n• deslizar X1 Y1 X2 Y2\n\nX/Y são coordenadas em pixels da tela. Para ações sensíveis, o Android continuará pedindo confirmação.")
+        })
+        control.addView(space(6))
+        controlStatus = label(LauncherAccessibilityService.lastResult, 13f, green, true)
+        control.addView(controlStatus)
+        root.addView(control, matchWrap())
         root.addView(space(12), matchWrap())
 
         val launchers = card()
@@ -199,6 +249,16 @@ class MainActivity : Activity() {
         root.addView(history, matchWrap())
         root.addView(space(12), matchWrap())
         root.addView(label("Launcher AI • protótipo em validação. Os resultados dependem do contador F3 visível e da leitura OCR.", 11f, muted, false, Gravity.CENTER), matchWrap())
+    }
+
+    private fun sendControl(command: String) {
+        if (!LauncherAccessibilityService.isConnected()) {
+            showMessage("Ative o serviço Launcher AI em Configurações > Acessibilidade.")
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            return
+        }
+        LauncherAccessibilityService.command(command)
+        if (::controlStatus.isInitialized) controlStatus.text = LauncherAccessibilityService.lastResult
     }
 
     private fun addLauncherRow(container: LinearLayout, title: String, packageNameToCheck: String, url: String) {
