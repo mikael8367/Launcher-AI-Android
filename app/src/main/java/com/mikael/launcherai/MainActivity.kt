@@ -45,6 +45,7 @@ class MainActivity : Activity() {
     private val muted = 0xFFB4C9C2.toInt()
     private val white = 0xFFF5FFF9.toInt()
     private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
+    private val aiClient by lazy { AiOnlineClient(this) }
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var statusText: TextView
     private lateinit var deviceText: TextView
@@ -147,6 +148,27 @@ class MainActivity : Activity() {
         controlStatus = label(LauncherAccessibilityService.lastResult, 13f, green, true)
         control.addView(controlStatus)
         root.addView(control, matchWrap())
+        root.addView(space(10), matchWrap())
+
+        val aiCard = card()
+        aiCard.addView(label("CÉREBRO ONLINE", 18f, white, true))
+        aiCard.addView(space(5))
+        aiCard.addView(label("A IA interpreta seu pedido e propõe uma ação permitida. Como ela não vê a tela, não inventa toques; toda ação proposta precisa da tua confirmação antes de ser executada.", 13f, muted))
+        aiCard.addView(space(8))
+        aiCard.addView(actionButton("CONFIGURAR CHAVE DA IA") { configureAiKey() })
+        aiCard.addView(space(6))
+        aiCard.addView(actionButton("PERGUNTAR À IA E PLANEJAR AÇÃO") { askOnlineAi() })
+        aiCard.addView(space(6))
+        aiCard.addView(actionButton("APAGAR CHAVE SALVA") {
+            AlertDialog.Builder(this).setTitle("Apagar chave?")
+                .setMessage("A chave criptografada será removida deste aparelho.")
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Apagar") { _, _ ->
+                    aiClient.clearKey()
+                    showMessage("Chave removida deste aparelho.")
+                }.show()
+        })
+        root.addView(aiCard, matchWrap())
         root.addView(space(12), matchWrap())
 
         val launchers = card()
@@ -337,6 +359,114 @@ class MainActivity : Activity() {
         root.addView(history, matchWrap())
         root.addView(space(12), matchWrap())
         root.addView(label("Launcher AI • protótipo em validação. Os resultados dependem do contador F3 visível e da leitura OCR.", 11f, muted, false, Gravity.CENTER), matchWrap())
+    }
+
+    private fun configureAiKey() {
+        val field = EditText(this).apply {
+            hint = "sk-..."
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setTextColor(white)
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+        }
+        val wrap = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), 0)
+            addView(label("A chave será criptografada com uma chave do Android Keystore e não será enviada ao GitHub. O uso da API pode gerar cobrança. Para distribuir o app publicamente, o ideal é usar um servidor intermediário próprio.", 13f, muted))
+            addView(space(8))
+            addView(field, matchWrap())
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Conectar IA online")
+            .setView(wrap)
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Salvar chave", null)
+            .create().also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        try {
+                            aiClient.saveKey(field.text?.toString().orEmpty())
+                            dialog.dismiss()
+                            showMessage("Chave salva com criptografia local. Agora faça um pedido no campo de controle e toque em Perguntar à IA.")
+                        } catch (e: Exception) {
+                            field.error = e.message ?: "Chave inválida"
+                        }
+                    }
+                }
+                dialog.show()
+            }
+    }
+
+    private fun askOnlineAi() {
+        val request = controlInput.text?.toString().orEmpty().trim()
+        if (request.isBlank()) {
+            showMessage("Escreva o que você quer que a IA faça no campo acima.")
+            return
+        }
+        if (!aiClient.hasKey()) {
+            configureAiKey()
+            return
+        }
+        controlStatus.text = "Consultando a IA online…"
+        Thread {
+            try {
+                val plan = aiClient.ask(request)
+                val reply = plan.optString("reply", "A IA respondeu sem explicação.")
+                val commands = plan.optJSONArray("commands") ?: org.json.JSONArray()
+                runOnUiThread {
+                    if (commands.length() == 0) {
+                        controlStatus.text = reply
+                        showMessage(reply)
+                        return@runOnUiThread
+                    }
+                    val command = commands.optString(0, "").trim()
+                    val allowed = command.equals("voltar", true) ||
+                        command.equals("volta", true) ||
+                        command.equals("back", true) ||
+                        command.equals("início", true) ||
+                        command.equals("inicio", true) ||
+                        command.equals("home", true) ||
+                        command.equals("tela inicial", true) ||
+                        command.equals("recentes", true) ||
+                        command.equals("apps recentes", true) ||
+                        command.equals("multitarefas", true) ||
+                        command.equals("notificações", true) ||
+                        command.equals("notificacoes", true) ||
+                        command.equals("abrir notificações", true) ||
+                        command.equals("configurações rápidas", true) ||
+                        command.equals("configuracoes rapidas", true) ||
+                        command.equals("painel rápido", true) ||
+                        command.equals("painel rapido", true) ||
+                        command.startsWith("abrir ", true) ||
+                        command.matches(Regex("(?i)^(tocar|toque)\\s+\\d+\\s+\\d+$")) ||
+                        command.matches(Regex("(?i)^(deslizar|arrastar)\\s+\\d+\\s+\\d+\\s+\\d+\\s+\\d+$"))
+                    if (!allowed) {
+                        controlStatus.text = "A IA sugeriu um comando fora da lista permitida; nada foi executado."
+                        showMessage("$reply\\n\\nComando recusado: $command")
+                        return@runOnUiThread
+                    }
+                    AlertDialog.Builder(this)
+                        .setTitle("Confirmar ação da IA")
+                        .setMessage("$reply\\n\\nAção proposta: $command\\n\\nNada será executado sem tua confirmação.")
+                        .setNegativeButton("Cancelar") { _, _ -> controlStatus.text = "Ação cancelada pelo usuário." }
+                        .setPositiveButton("Executar") { _, _ ->
+                            if (!LauncherAccessibilityService.isConnected()) {
+                                controlStatus.text = "Ative a Acessibilidade para executar a ação."
+                                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                            } else {
+                                LauncherAccessibilityService.command(command)
+                                controlStatus.text = LauncherAccessibilityService.lastResult
+                            }
+                        }.show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    val message = e.message ?: "Falha ao consultar o serviço de IA."
+                    controlStatus.text = message
+                    showMessage("Não consegui consultar a IA: $message")
+                }
+            }
+        }.start()
     }
 
     private fun sendControl(command: String) {
