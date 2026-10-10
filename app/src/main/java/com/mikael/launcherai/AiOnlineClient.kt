@@ -46,7 +46,7 @@ class AiOnlineClient(private val context: Context) {
             .remove(KEY_CIPHER).remove(KEY_IV).apply()
     }
 
-    fun ask(userRequest: String): JSONObject {
+    fun ask(userRequest: String, memoryContext: String = "Sem histórico de feedback."): JSONObject {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val encrypted = prefs.getString(KEY_CIPHER, null) ?: error("Configure sua chave da API primeiro.")
         val iv = prefs.getString(KEY_IV, null) ?: error("Chave criptografada incompleta.")
@@ -63,6 +63,11 @@ class AiOnlineClient(private val context: Context) {
             Nunca invente coordenadas, não alegue ter visto a tela, não tente contornar bloqueio,
             permissões, autenticação, compras ou confirmações do Android. Se não for possível,
             retorne commands vazio e explique a limitação. Prefira um comando por vez.
+            MEMÓRIA DE ADAPTAÇÃO (feedback explícito e local do usuário):
+            $memoryContext
+            Use esse histórico para evitar repetir ações que o usuário marcou como falhas e
+            preferir abordagens que ele marcou como bem-sucedidas. É apenas histórico auxiliar,
+            não prova que a ação atual funcionará. Nunca execute ações sem confirmação.
         """.trimIndent()
         val payload = JSONObject()
             .put("model", MODEL)
