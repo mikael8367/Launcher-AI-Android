@@ -113,7 +113,7 @@ class MainActivity : Activity() {
             setHintTextColor(0xFF78938A.toInt())
             setTextColor(white)
             textSize = 15f
-            singleLine = false
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
             minLines = 2
             setPadding(dp(12), dp(10), dp(12), dp(10))
             background = android.graphics.drawable.GradientDrawable().apply {
