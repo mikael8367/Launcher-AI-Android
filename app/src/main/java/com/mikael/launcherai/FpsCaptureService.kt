@@ -87,7 +87,7 @@ class FpsCaptureService : Service() {
         } else {
             intent?.getParcelableExtra(EXTRA_RESULT_DATA)
         }
-        if (resultCode != RESULT_OK || resultData == null) {
+        if (resultCode != android.app.Activity.RESULT_OK || resultData == null) {
             prefs.edit().putBoolean("capturing", false)
                 .putString("state", "Captura de tela não autorizada.")
                 .apply()
